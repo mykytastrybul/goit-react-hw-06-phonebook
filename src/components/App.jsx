@@ -27,8 +27,7 @@ export function App() {
   );
 
   const deleteContact = contactId => {
-    const newContacts = contacts.filter(contact => contact.id !== contactId);
-    setContact(newContacts);
+    setContact(prev => prev.filter(contact => contact.id !== contactId));
   };
 
   const getFilterValue = e => setFilter(e.target.value);
