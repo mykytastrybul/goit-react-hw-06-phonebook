@@ -1,12 +1,14 @@
-import useLocalStorage from 'hooks/useLocalStorage';
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import ContactForm from './ContactForm/ContactForm';
 import ContactList from './ContactList/ContactList ';
 import Filter from './Filter/Filter';
+import { useSelector, useDispatch } from 'react-redux';
+import { saveContact, filterContacts, deleteContact } from '../redux/store';
 
 export function App() {
-  const [contacts, setContact] = useLocalStorage('contacts', []);
-  const [filter, setFilter] = useState('');
+  const dispatch = useDispatch();
+  const contacts = useSelector(state => state.contacts.items);
+  const filter = useSelector(state => state.contacts.filter);
 
   const addContact = newContact => {
     if (
@@ -16,21 +18,22 @@ export function App() {
     ) {
       return alert(`Contact ${newContact.name} already exists`);
     }
-    const contact = {
-      ...newContact,
-    };
-    setContact(prev => [...prev, contact]);
+    dispatch(saveContact(newContact));
   };
+
+  const deletingContact = contactId => {
+    dispatch(deleteContact(contactId));
+  };
+
+  const getFilterValue = e => dispatch(filterContacts(e.target.value));
 
   const filtered = contacts.filter(contact =>
     contact.name.toLowerCase().includes(filter.toLowerCase())
   );
 
-  const deleteContact = contactId => {
-    setContact(prev => prev.filter(contact => contact.id !== contactId));
-  };
-
-  const getFilterValue = e => setFilter(e.target.value);
+  useEffect(() => {
+    window.localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
 
   return (
     <>
@@ -38,7 +41,7 @@ export function App() {
       <ContactForm onSubmit={addContact} />
       <h1>Contacts</h1>
       <Filter value={filter} changeFilter={getFilterValue} />
-      <ContactList contacts={filtered} onDeleteContact={deleteContact} />
+      <ContactList contacts={filtered} onDeleteContact={deletingContact} />
     </>
   );
 }
