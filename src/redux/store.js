@@ -1,32 +1,38 @@
-import { configureStore, createSlice } from '@reduxjs/toolkit';
+import { configureStore } from '@reduxjs/toolkit';
+import {
+  persistStore,
+  persistReducer,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
+import { contactsSlice } from './contactsSlice/contactsSlice';
 
-const initialState = {
-  items: JSON.parse(window.localStorage.getItem('contacts')) || [],
-  filter: '',
+const persistConfig = {
+  key: 'contacts',
+  storage,
+  blacklist: ['filter'],
 };
 
-const contactsSlice = createSlice({
-  name: 'contacts',
-  initialState,
-  reducers: {
-    saveContact(state, action) {
-      state.items.push(action.payload);
-    },
-    deleteContact(state, action) {
-      const index = state.items.findIndex(
-        contact => contact.id === action.payload
-      );
-      state.items.splice(index, 1);
-    },
-    filterContacts(state, action) {
-      state.filter = action.payload;
-    },
-  },
-});
-
 export const store = configureStore({
-  reducer: { contacts: contactsSlice.reducer },
+  reducer: { contacts: persistReducer(persistConfig, contactsSlice.reducer) },
+  middleware: getDefaultMiddleware =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }),
 });
 
-export const { saveContact, deleteContact, filterContacts } =
-  contactsSlice.actions;
+export const persistor = persistStore(store);
+
+export const {
+  saveContact,
+  deleteContact,
+  filterContacts,
+  saveInLocalStorage,
+} = contactsSlice.actions;
